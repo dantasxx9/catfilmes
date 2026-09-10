@@ -156,7 +156,8 @@ o que leva ao caso seguinte. Sem esse timeout, uma conexão ruim deixaria o app 
 para sempre.
 
 **Se falhar:** vê o `ErrorState` — um ícone de nuvem cortada, a mensagem *"Nao foi possivel
-carregar os filmes. Verifique sua conexao e tente de novo."* e o botão **Tentar novamente**.
+carregar os filmes. Verifique sua conexao e tente de novo."*, o botão **Tentar novamente** e um
+**X** no canto superior direito para dispensar a mensagem (detalhado na pergunta 10).
 
 O `try/catch/finally` cobre os dois casos de uma vez. O `finally` é o detalhe importante: ele
 zera o `carregando` **mesmo quando dá erro**, o que impede o app de ficar preso no spinner
@@ -191,15 +192,40 @@ Tocar no botão limpa o erro, volta para o estado de carregamento e refaz a requ
 
 ### 9. Em quais dispositivos/ambientes o grupo testou o app? Quais diferenças de comportamento ou de layout foram observadas entre eles?
 
-Testamos a mesma build rodando via `npx expo start --web`, em dois tamanhos de viewport, medindo
-os elementos pelo DOM:
+Testamos em quatro ambientes, sendo dois aparelhos físicos:
 
-| Ambiente | Viewport | Largura do card | Altura do card | Pôster |
-|---|---|---|---|---|
-| Formato celular | 375 x 812 | 347 px | 121 px | 70 x 105 |
-| Formato tablet / desktop | 1024 x 768 | 981 px | 121 px | 70 x 105 |
+| Ambiente | Como | Resultado |
+|---|---|---|
+| **Samsung Galaxy S25 Ultra** (Android) | Expo Go | Funcional — listagem, navegação, botões e volta funcionando |
+| **Motorola Edge 30** (Android) | Expo Go | Funcional — comportamento idêntico ao do S25 Ultra |
+| **iPhone 16** (iOS) | Expo Go | **Não foi possível testar** (motivo abaixo) |
+| Navegador | `npx expo start --web`, em dois tamanhos de viewport | Funcional |
 
-**Diferenças observadas:**
+**Diferença entre os dois Androids: nenhuma.** O Edge 30 e o S25 Ultra são aparelhos de faixas
+de preço e tamanhos de tela bem diferentes, e o app se comportou igual nos dois — o que é um bom
+sinal para o layout, já que ele não depende de nenhuma medida fixa de tela.
+
+**Por que o iPhone 16 não pôde ser testado.** Ao tentar abrir, o Expo Go exigiu estar logado na
+mesma conta que subiu o projeto. Fomos atrás do motivo na documentação da Expo e descobrimos que
+**o Expo Go não é mais distribuído pela App Store**. Hoje, para usá-lo no iOS, é preciso:
+
+1. Ter assinatura ativa do **Apple Developer Program** (que é paga);
+2. Buildar o próprio Expo Go com `npx eas-cli@latest go`;
+3. Distribuir por **TestFlight** e adicionar o Apple ID como testador interno.
+
+Ou seja, **não é uma falha do nosso app** — é uma restrição de distribuição da plataforma iOS.
+Testar no iPhone exigiria um development build gerado com EAS, que é assunto da etapa de build.
+No Android, o Expo Go continua no Google Play normalmente, e foi por isso que os dois aparelhos
+Android funcionaram sem nenhuma configuração extra.
+
+**Medições no navegador**, feitas pelo DOM:
+
+| Viewport | Largura do card | Altura do card | Pôster |
+|---|---|---|---|
+| 375 x 812 (formato celular) | 347 px | 121 px | 70 x 105 |
+| 1024 x 768 (formato tablet) | 981 px | 121 px | 70 x 105 |
+
+**Diferenças observadas entre navegador e aparelho:**
 
 - **O card estica, o pôster não.** A largura do card acompanha a tela (347 → 981 px), mas o
   pôster continua fixo em 70x105. No formato celular o card fica equilibrado; a 1024 px ele vira
@@ -213,10 +239,9 @@ os elementos pelo DOM:
 - **Acentuação e caracteres não-latinos vieram corretos** nos dois: a lista trouxe títulos em
   português ("Código: Vingança", "Obsessão", "O Último Nascer do Sol") e um título em japonês
   ("愛のぬくもり"), todos renderizados sem quadradinho.
-
-**Pendente:** falta rodar a mesma passagem no **Expo Go em um Android físico**, que é onde o
-gesto de voltar do sistema e o comportamento nativo da `FlatList` realmente aparecem. É o
-próximo teste da lista.
+- **O gesto de voltar só existe no aparelho.** No navegador, sair dos detalhes depende do botão
+  do cabeçalho; nos dois Androids funcionam também o gesto de arrastar da borda e o botão de
+  voltar do sistema, que o React Navigation já liga sozinho.
 
 ---
 
@@ -256,6 +281,20 @@ no navegador pode ser mascarado pelo cache**, e no aparelho isso se comporta de 
 "ainda não avaliado". Não corrigimos ainda — está anotado como melhoria: quando
 `vote_average` for 0, o certo é esconder a estrela ou escrever "sem nota".
 
+**4. A tela de erro não tinha como ser fechada (corrigido).** Testando no celular, a tela de erro
+ocupa a tela inteira e a única ação disponível era "Tentar novamente". Se a internet continuasse
+fora, o usuário ficava preso ali, sem nenhum jeito de dispensar a mensagem. Isso não aparece no
+navegador, onde sempre existe o botão de voltar do próprio browser — foi o teste no aparelho que
+expôs o problema.
+
+Corrigimos adicionando uma prop opcional `onFechar` ao `ErrorState`, que renderiza um **X** no
+canto superior direito. Cada tela decide o que ele faz:
+
+- Na **Details**, o X chama `navigation.goBack()` e devolve o usuário para a listagem.
+- Na **Home** não há tela anterior, então o X limpa o erro e cai em um estado de lista vazia,
+  com o texto "Nenhum filme carregado" e um botão **Recarregar** (feito com o
+  `ListEmptyComponent` da `FlatList`).
+
 ---
 
 ### 11. Por que testar em mais de um ambiente é especialmente importante em desenvolvimento mobile híbrido?
@@ -276,6 +315,10 @@ em cada plataforma**, e o resultado nem sempre é igual:
   build usa exatamente as versões que estão no `package.json`. Foi por isso que o
   `expo-doctor` avisou, na aula passada, que faltava o `expo-font` — um problema que só
   apareceria fora do Expo Go.
+- **O próprio ambiente de teste pode não estar disponível.** Descobrimos na prática que não dá
+  para testar no iOS pelo Expo Go sem uma conta paga de desenvolvedor Apple. Isso é um dado que
+  só aparece quando se tenta de verdade — e que muda o planejamento da etapa de build, porque
+  significa que a versão para iPhone vai exigir um development build via EAS.
 - **Erro de plataforma aparece tarde.** Testando em um só ambiente, o problema só é descoberto
   quando alguém instala o app no aparelho — quando já é caro consertar.
 

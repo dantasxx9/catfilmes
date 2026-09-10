@@ -8,7 +8,7 @@ import { getMovieById } from '../services/moviesService';
 // Tela de detalhes: recebe o id pela rota e busca os dados completos do filme.
 // Busca de novo (em vez de reaproveitar o objeto da lista) porque o endpoint
 // de listagem nao retorna duracao nem generos.
-export default function DetailsScreen({ route }) {
+export default function DetailsScreen({ route, navigation }) {
   const { movieId } = route.params;
 
   const [filme, setFilme] = useState(null);
@@ -32,7 +32,16 @@ export default function DetailsScreen({ route }) {
   }, [carregarFilme]);
 
   if (carregando) return <Loading mensagem="Carregando detalhes..." />;
-  if (erro) return <ErrorState mensagem={erro} onTentarNovamente={carregarFilme} />;
+  // O X fecha a mensagem e devolve o usuario para a listagem.
+  if (erro) {
+    return (
+      <ErrorState
+        mensagem={erro}
+        onTentarNovamente={carregarFilme}
+        onFechar={() => navigation.goBack()}
+      />
+    );
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>

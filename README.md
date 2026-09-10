@@ -67,6 +67,10 @@ As duas telas tratam três estados. Enquanto a requisição não volta, aparece 
 ou erro 4xx/5xx —, aparece o `ErrorState` com a mensagem e um botão **Tentar novamente**, que
 dispara a mesma função de busca sem precisar fechar o app.
 
+O `ErrorState` também tem um **X** no canto superior direito para dispensar a mensagem: na tela
+de detalhes ele volta para a listagem; na tela inicial ele cai em um estado de lista vazia com o
+texto "Nenhum filme carregado" e um botão para recarregar.
+
 ### Estrutura de pastas
 
 ```
