@@ -1,8 +1,11 @@
 # Catálogo de Filmes
 
-Aplicativo mobile em **React Native + Expo** que vai listar filmes em uma tela inicial
-(pôster e título) e abrir uma tela de detalhes com as informações completas do filme
+Aplicativo mobile em **React Native + Expo** que lista filmes em uma tela inicial
+(pôster e título) e abre uma tela de detalhes com as informações completas do filme
 selecionado.
+
+**Status:** MVP funcional — listagem, navegação, tela de detalhes, tratamento de
+carregamento e erro, e teste automatizado.
 
 ---
 
@@ -52,20 +55,39 @@ com uma API única. Ícone vetorial escala sem borrar e muda de cor por prop. De
 ### Fluxo de dados
 
 A Home busca a lista pela camada de serviços e renderiza um card por filme. Ao tocar em um card,
-chama `navigation.navigate('Details', { movieId })`. A tela de detalhes lê o `id` em
+chama `navigation.navigate('Details', { movieId, title })`. A tela de detalhes lê o `movieId` em
 `route.params` e busca os dados completos — necessário porque o endpoint de listagem não retorna
-duração nem gêneros.
+duração nem gêneros. O `title` vai junto só para o cabeçalho já aparecer preenchido durante o
+carregamento.
+
+### Estados de carregamento e erro
+
+As duas telas tratam três estados. Enquanto a requisição não volta, aparece o componente
+`Loading` (spinner + mensagem). Se a requisição falhar — sem internet, timeout de 10s do axios
+ou erro 4xx/5xx —, aparece o `ErrorState` com a mensagem e um botão **Tentar novamente**, que
+dispara a mesma função de busca sem precisar fechar o app.
 
 ### Estrutura de pastas
 
 ```
 catfilmes/
-├── App.js           # ponto de entrada do app
-├── app.json         # configuração do Expo
-├── assets/          # imagens estáticas (ícone, splash)
-├── screens/         # telas: HomeScreen e DetailsScreen
-├── components/      # componentes reutilizáveis: MovieCard, Button, Loading
-└── services/        # comunicação com a API (instância do axios e funções de busca)
+├── App.js                        # ponto de entrada: providers e rotas do stack
+├── app.json                      # configuração do Expo
+├── .env.example                  # modelo do arquivo .env (token do TMDB)
+├── assets/                       # imagens estáticas (ícone, splash)
+├── screens/
+│   ├── HomeScreen.js             # lista de filmes
+│   └── DetailsScreen.js          # detalhes de um filme
+├── components/
+│   ├── MovieCard.js              # card de filme da listagem
+│   ├── Button.js                 # botão padrão com ícone
+│   ├── Loading.js                # estado de carregamento
+│   └── ErrorState.js             # estado de erro com "tentar novamente"
+├── services/
+│   ├── api.js                    # instância do axios (baseURL, timeout, autenticação)
+│   └── moviesService.js          # formatMovie, getPopularMovies, getMovieById
+└── __tests__/
+    └── moviesService.test.js     # testes da formatação de dados da API
 ```
 
 A separação existe para que cada pasta tenha uma responsabilidade só: `screens/` monta telas,
@@ -79,11 +101,37 @@ Assim o grupo trabalha em arquivos diferentes sem conflito de merge, e trocar a 
 
 ```bash
 npm install
+```
+
+Depois, crie um arquivo `.env` na raiz (use o `.env.example` como modelo) com o token da API:
+
+```
+EXPO_PUBLIC_TMDB_TOKEN=seu_api_read_access_token_do_tmdb
+```
+
+O token sai de [themoviedb.org](https://www.themoviedb.org) → *Configurações → API* → campo
+**API Read Access Token**. O `.env` está no `.gitignore`, então o token não vai para o
+repositório. Sem ele, o app abre direto no estado de erro.
+
+```bash
 npx expo start
 ```
 
-Depois, leia o QR Code com o app **Expo Go** ou pressione `a` para abrir no emulador Android.
+Leia o QR Code com o app **Expo Go** ou pressione `a` para abrir no emulador Android.
+
+## Testes
+
+```bash
+npm test
+```
+
+Roda o Jest com o preset `jest-expo`. São 6 testes sobre a função `formatMovie` do
+`services/moviesService.js`, que converte a resposta crua do TMDB para o formato que as telas
+usam: extração do ano, montagem da URL do pôster, arredondamento da nota e os valores de
+reserva quando a API não manda um campo. Os testes usam um mock da resposta da API, então não
+dependem de internet nem do token.
 
 ---
 
-As respostas das 17 perguntas da aula estão em [RESPOSTAS.md](RESPOSTAS.md).
+Respostas das perguntas das aulas: [RESPOSTAS.md](RESPOSTAS.md) (arquitetura e setup) e
+[RESPOSTAS-MVP.md](RESPOSTAS-MVP.md) (implementação e testes do MVP).
