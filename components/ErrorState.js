@@ -1,3 +1,4 @@
+import { colors } from '../theme';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Button from './Button';
@@ -14,12 +15,12 @@ export default function ErrorState({ mensagem, onTentarNovamente, onFechar }) {
           hitSlop={12}
           accessibilityLabel="Fechar mensagem de erro"
         >
-          <Ionicons name="close" size={26} color="#8b90a0" />
+          <Ionicons name="close" size={26} color={colors.muted} />
         </TouchableOpacity>
       )}
 
       <View style={styles.conteudo}>
-        <Ionicons name="cloud-offline-outline" size={48} color="#e50914" />
+        <Ionicons name="cloud-offline-outline" size={48} color={colors.accent} />
         <Text style={styles.mensagem}>{mensagem}</Text>
         {onTentarNovamente && (
           <Button titulo="Tentar novamente" icone="refresh" onPress={onTentarNovamente} />
@@ -30,8 +31,8 @@ export default function ErrorState({ mensagem, onTentarNovamente, onFechar }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#12151c' },
+  container: { flex: 1, backgroundColor: colors.background },
   fechar: { position: 'absolute', top: 12, right: 12, padding: 6, zIndex: 1 },
   conteudo: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  mensagem: { color: '#fff', textAlign: 'center', marginVertical: 16, lineHeight: 21 },
+  mensagem: { color: colors.text, textAlign: 'center', marginVertical: 16, lineHeight: 21 },
 });

@@ -1,3 +1,4 @@
+import { colors, headingFont } from '../theme';
 import { useCallback, useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,8 +21,8 @@ export default function DetailsScreen({ route, navigation }) {
       setCarregando(true);
       setErro(null);
       setFilme(await getMovieById(movieId));
-    } catch (e) {
-      setErro('Nao foi possivel carregar os detalhes deste filme.');
+    } catch {
+      setErro('Não foi possível carregar os detalhes deste filme.');
     } finally {
       setCarregando(false);
     }
@@ -45,24 +46,24 @@ export default function DetailsScreen({ route, navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      {filme.posterUrl && <Image source={{ uri: filme.posterUrl }} style={styles.poster} />}
+      {filme.posterUrl ? <Image accessibilityLabel={`Pôster de ${filme.title}`} source={{ uri: filme.posterUrl }} style={styles.poster} /> : <Text style={styles.meta}>Pôster não disponível</Text>}
 
       <Text style={styles.titulo}>{filme.title}</Text>
 
       <View style={styles.metaLinha}>
-        <Ionicons name="calendar-outline" size={15} color="#8b90a0" />
+        <Ionicons name="calendar-outline" size={15} color={colors.muted} />
         <Text style={styles.meta}>{filme.year}</Text>
 
         {filme.rating && (
           <>
-            <Ionicons name="star" size={15} color="#f5c518" style={styles.metaIcone} />
+            <Ionicons name="star" size={15} color={colors.accent} style={styles.metaIcone} />
             <Text style={styles.meta}>{filme.rating}</Text>
           </>
         )}
 
         {filme.runtime && (
           <>
-            <Ionicons name="time-outline" size={15} color="#8b90a0" style={styles.metaIcone} />
+            <Ionicons name="time-outline" size={15} color={colors.muted} style={styles.metaIcone} />
             <Text style={styles.meta}>{filme.runtime} min</Text>
           </>
         )}
@@ -77,14 +78,14 @@ export default function DetailsScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#12151c' },
-  conteudo: { padding: 16, paddingBottom: 32 },
-  poster: { width: '100%', height: 420, borderRadius: 12, backgroundColor: '#1c212b' },
-  titulo: { color: '#fff', fontSize: 23, fontWeight: '700', marginTop: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  conteudo: { padding: 16, paddingBottom: 32, width: '100%', maxWidth: 760, alignSelf: 'center' },
+  poster: { width: '100%', height: 420, resizeMode: 'contain', borderRadius: 12, backgroundColor: colors.surface },
+  titulo: { color: colors.text, fontSize: 23, fontFamily: headingFont, marginTop: 16 },
   metaLinha: { flexDirection: 'row', alignItems: 'center', marginTop: 10, flexWrap: 'wrap' },
   metaIcone: { marginLeft: 14 },
-  meta: { color: '#8b90a0', fontSize: 14, marginLeft: 5 },
-  generos: { color: '#8b90a0', fontSize: 14, marginTop: 8 },
-  secao: { color: '#fff', fontSize: 17, fontWeight: '600', marginTop: 24, marginBottom: 8 },
-  sinopse: { color: '#c3c8d2', fontSize: 15, lineHeight: 22 },
+  meta: { color: colors.muted, fontSize: 14, marginLeft: 5 },
+  generos: { color: colors.muted, fontSize: 14, marginTop: 8 },
+  secao: { color: colors.text, fontSize: 17, fontFamily: headingFont, marginTop: 24, marginBottom: 8 },
+  sinopse: { color: colors.muted, fontSize: 15, lineHeight: 22 },
 });

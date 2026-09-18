@@ -1,3 +1,4 @@
+import { colors, headingFont } from '../theme';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -5,12 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 // entao serve em qualquer lista (populares, busca, favoritos).
 export default function MovieCard({ movie, onPress }) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Ver detalhes de ${movie.title}`} style={styles.card} onPress={onPress} activeOpacity={0.8}>
       {movie.posterUrl ? (
         <Image source={{ uri: movie.posterUrl }} style={styles.poster} />
       ) : (
         <View style={[styles.poster, styles.posterVazio]}>
-          <Ionicons name="film-outline" size={26} color="#8b90a0" />
+          <Ionicons name="film-outline" size={26} color={colors.muted} />
         </View>
       )}
 
@@ -22,13 +23,13 @@ export default function MovieCard({ movie, onPress }) {
 
         {movie.rating && (
           <View style={styles.notaLinha}>
-            <Ionicons name="star" size={14} color="#f5c518" />
+            <Ionicons name="star" size={14} color={colors.accent} />
             <Text style={styles.nota}>{movie.rating}</Text>
           </View>
         )}
       </View>
 
-      <Ionicons name="chevron-forward" size={20} color="#8b90a0" />
+      <Ionicons name="chevron-forward" size={20} color={colors.muted} />
     </TouchableOpacity>
   );
 }
@@ -37,16 +38,16 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1c212b',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 8,
     marginBottom: 12,
   },
-  poster: { width: 70, height: 105, borderRadius: 8, backgroundColor: '#2a303c' },
+  poster: { width: 70, height: 105, borderRadius: 8, backgroundColor: colors.border },
   posterVazio: { alignItems: 'center', justifyContent: 'center' },
   info: { flex: 1, marginHorizontal: 14 },
-  titulo: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  ano: { color: '#8b90a0', fontSize: 13, marginTop: 4 },
+  titulo: { color: colors.text, fontSize: 16, fontFamily: headingFont },
+  ano: { color: colors.muted, fontSize: 13, marginTop: 4 },
   notaLinha: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-  nota: { color: '#8b90a0', fontSize: 13, marginLeft: 4 },
+  nota: { color: colors.muted, fontSize: 13, marginLeft: 4 },
 });

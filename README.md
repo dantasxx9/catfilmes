@@ -1,141 +1,121 @@
-# Catálogo de Filmes
+# CatFilmes
 
-Aplicativo mobile em **React Native + Expo** que lista filmes em uma tela inicial
-(pôster e título) e abre uma tela de detalhes com as informações completas do filme
-selecionado.
+**Seu próximo play começa aqui.** Aplicativo React Native + Expo para explorar filmes populares do TMDB, buscar títulos na lista carregada e consultar pôster, ano, nota, duração, gêneros e sinopse.
 
-**Status:** MVP funcional — listagem, navegação, tela de detalhes, tratamento de
-carregamento e erro, e teste automatizado.
+Integrantes: Mateus Dantas de Morais, Guilherme Lavigne Aguiar Brito e Alisson Silva Nascimento.
 
----
+## Entrega pós-MVP
 
-## Integrantes do grupo
+- Identidade própria: fundo azul-noturno, destaques âmbar e títulos em Space Grotesk Bold.
+- Categoria implementada: **descoberta**, com busca que ignora acentos e maiúsculas, filtro de nota 7+ e ordenação por popularidade, título ou nota.
+- Busca e filtros combináveis, contagem de resultados, limpeza de filtros e preservação do estado ao voltar dos detalhes.
+- Estados de carregamento, falha com nova tentativa, catálogo vazio, busca sem resultados e dados incompletos.
+- 12 testes automatizados aprovados: 6 originais do MVP e 6 de descoberta.
+- Build web de produção gerado e conferido no navegador em 18/09/2026.
 
-- Mateus Dantas de Morais
-- Guilherme Lavigne Aguiar Brito
-- Alisson Silva Nascimento
+**Limite intencional:** a descoberta opera na primeira página de populares retornada pelo TMDB (20 filmes na validação). Não é uma busca em todo o catálogo. A interface informa esse limite. Os filtros ficam na sessão; não há conta, favoritos nem sincronização.
 
----
+## Identidade visual
 
-## Bibliotecas escolhidas
+| Papel | Cor |
+|---|---|
+| Fundo | `#0B1220` |
+| Superfície de cards e campos | `#172338` |
+| Bordas | `#30415B` |
+| Destaque e ações | `#FFBE55` |
+| Texto principal | `#F5F7FC` |
+| Texto secundário | `#ACBBD0` |
 
-| Necessidade | Biblioteca | Versão | Instalação |
-|---|---|---|---|
-| Navegação entre telas | `@react-navigation/native` + `@react-navigation/native-stack` | 7.3.18 / 7.18.10 | `npx expo install` |
-| Dependências nativas da navegação | `react-native-screens` / `react-native-safe-area-context` | 4.26.0 / 5.7.0 | `npx expo install` |
-| Consumo de API | `axios` | 1.20.0 | `npm install` |
-| Ícones | `@expo/vector-icons` (+ `expo-font`) | 15.1.1 | `npx expo install` |
+A paleta remete à sala de cinema escura e à luz da projeção. **Space Grotesk 700** destaca títulos e cabeçalhos; a fonte nativa do sistema mantém textos longos legíveis. A fonte é empacotada, sem carregamento de um CDN durante o uso.
 
-**React Navigation (native-stack)** — é a solução recomendada pela documentação do React Native
-e do Expo, e o `native-stack` usa os componentes de navegação nativos de cada plataforma, então
-as transições ficam iguais às de qualquer app do sistema. Descartamos o **Expo Router**, que
-organiza rotas por arquivos em `app/` e conflita com a estrutura `screens/` do projeto, e o
-**react-native-navigation (Wix)**, que exige código nativo e não roda no Expo Go.
+O ícone autoral reúne a letra **C** e o símbolo de **play**. Ícone principal, ícone adaptativo/monocromático Android, favicon e imagem da splash usam a mesma marca. Os arquivos substituem as imagens do template. A splash nativa está configurada via `expo-splash-screen`, aguardando o carregamento da fonte. Sua aparência em instalação nativa ainda precisa ser conferida em um build Android/iOS; o build web não valida a splash nativa.
 
-**Axios** — permite criar uma instância com `baseURL`, `timeout` e parâmetros fixos (chave da
-API e idioma) declarados uma única vez. Converte a resposta em JSON automaticamente e lança erro
-em status 4xx/5xx, o que o `fetch` nativo não faz. Descartamos o **TanStack Query**, que resolve
-cache e estado de servidor — recursos que não se pagam em um app de duas telas.
+![Ícone CatFilmes](assets/icon.png)
 
-**@expo/vector-icons** — já faz parte do ecossistema Expo e embute vários conjuntos de ícones
-com uma API única. Ícone vetorial escala sem borrar e muda de cor por prop. Descartamos o
-`react-native-vector-icons` puro, que exige linkagem manual das fontes fora do Expo.
-
----
-
-## Arquitetura
-
-### Telas
-
-| Tela | O que exibe | De onde vêm os dados |
-|---|---|---|
-| **Home** | Lista rolável de filmes: pôster, título e ano | `GET /movie/popular` (TMDB) |
-| **Details** | Pôster, título, ano, nota, duração, gêneros e sinopse | `GET /movie/{id}` (TMDB) |
-
-### Fluxo de dados
-
-A Home busca a lista pela camada de serviços e renderiza um card por filme. Ao tocar em um card,
-chama `navigation.navigate('Details', { movieId, title })`. A tela de detalhes lê o `movieId` em
-`route.params` e busca os dados completos — necessário porque o endpoint de listagem não retorna
-duração nem gêneros. O `title` vai junto só para o cabeçalho já aparecer preenchido durante o
-carregamento.
-
-### Estados de carregamento e erro
-
-As duas telas tratam três estados. Enquanto a requisição não volta, aparece o componente
-`Loading` (spinner + mensagem). Se a requisição falhar — sem internet, timeout de 10s do axios
-ou erro 4xx/5xx —, aparece o `ErrorState` com a mensagem e um botão **Tentar novamente**, que
-dispara a mesma função de busca sem precisar fechar o app.
-
-O `ErrorState` também tem um **X** no canto superior direito para dispensar a mensagem: na tela
-de detalhes ele volta para a listagem; na tela inicial ele cai em um estado de lista vazia com o
-texto "Nenhum filme carregado" e um botão para recarregar.
-
-### Estrutura de pastas
-
-```
-catfilmes/
-├── App.js                        # ponto de entrada: providers e rotas do stack
-├── app.json                      # configuração do Expo
-├── .env.example                  # modelo do arquivo .env (token do TMDB)
-├── assets/                       # imagens estáticas (ícone, splash)
-├── screens/
-│   ├── HomeScreen.js             # lista de filmes
-│   └── DetailsScreen.js          # detalhes de um filme
-├── components/
-│   ├── MovieCard.js              # card de filme da listagem
-│   ├── Button.js                 # botão padrão com ícone
-│   ├── Loading.js                # estado de carregamento
-│   └── ErrorState.js             # estado de erro com "tentar novamente"
-├── services/
-│   ├── api.js                    # instância do axios (baseURL, timeout, autenticação)
-│   └── moviesService.js          # formatMovie, getPopularMovies, getMovieById
-└── __tests__/
-    └── moviesService.test.js     # testes da formatação de dados da API
-```
-
-A separação existe para que cada pasta tenha uma responsabilidade só: `screens/` monta telas,
-`components/` desenha pedaços reutilizáveis de interface e `services/` conversa com a rede.
-Assim o grupo trabalha em arquivos diferentes sem conflito de merge, e trocar a API afeta apenas
-`services/`.
-
----
+Cores e fonte são centralizadas em `theme.js`; as telas reutilizam `Button`, `MovieCard`, `Loading` e `ErrorState`. Contêineres usam margem interna de 16 px e largura máxima de 760 px; cards e botões têm cantos de 12 px. Botões têm altura mínima de 44 px, feedback de pressão e destaque de seleção. A marca pode ser regenerada no Windows com `powershell -File scripts/generate-brand.ps1`.
 
 ## Como rodar
 
-```bash
-npm install
+Pré-requisitos: Node.js compatível com o Expo SDK 57, npm e acesso à internet. Use preferencialmente Node 22.13+ ou 24 LTS. Para mobile, utilize uma versão do Expo Go compatível com o SDK ou um development build.
+
+```sh
+npm ci
 ```
 
-Depois, crie um arquivo `.env` na raiz (use o `.env.example` como modelo) com o token da API:
+Copie `.env.example` para `.env` e preencha:
 
-```
+```dotenv
 EXPO_PUBLIC_TMDB_TOKEN=seu_api_read_access_token_do_tmdb
 ```
 
-O token sai de [themoviedb.org](https://www.themoviedb.org) → *Configurações → API* → campo
-**API Read Access Token**. O `.env` está no `.gitignore`, então o token não vai para o
-repositório. Sem ele, o app abre direto no estado de erro.
+Obtenha o token em sua conta no [TMDB](https://www.themoviedb.org/settings/api). Não envie `.env` ao GitHub. Variáveis `EXPO_PUBLIC_*` são incorporadas ao bundle e **não são segredos protegidos no cliente**. Para distribuição pública, avaliar um backend intermediário e as condições de uso do TMDB.
 
-```bash
-npx expo start
+```sh
+npm start       # Expo
+npm run web     # navegador em desenvolvimento
+npm run android # Expo em Android disponível
+npm run ios     # iOS disponível; simulador exige macOS
 ```
 
-Leia o QR Code com o app **Expo Go** ou pressione `a` para abrir no emulador Android.
+Sem token válido ou internet, o app apresenta mensagem de erro com nova tentativa.
 
-## Testes
+## Testes e build de teste
 
-```bash
-npm test
+```sh
+npm test -- --runInBand
+npm run build:web
+node scripts/serve-build.cjs
 ```
 
-Roda o Jest com o preset `jest-expo`. São 6 testes sobre a função `formatMovie` do
-`services/moviesService.js`, que converte a resposta crua do TMDB para o formato que as telas
-usam: extração do ano, montagem da URL do pôster, arredondamento da nota e os valores de
-reserva quando a API não manda um campo. Os testes usam um mock da resposta da API, então não
-dependem de internet nem do token.
+Abra [http://127.0.0.1:4173](http://127.0.0.1:4173). O servidor usa **os arquivos exportados em `dist/`**, sem Metro e sem modo de desenvolvimento. Encerre com Ctrl+C. `dist/` é regenerável e está no `.gitignore`; o bundle local contém o token usado no build e não deve ser publicado indiscriminadamente.
 
----
+O build de teste entregue nesta etapa é **web**, não um APK. Não foi executado EAS Build nem gerado APK/IPA. Ainda falta configurar o projeto/conta EAS e validar o app instalado em aparelho para uma entrega nativa. Se a disciplina exigir especificamente APK/preview Expo, essa parte permanece pendente.
 
-Respostas das perguntas das aulas: [RESPOSTAS.md](RESPOSTAS.md) (arquitetura e setup) e
-[RESPOSTAS-MVP.md](RESPOSTAS-MVP.md) (implementação e testes do MVP).
+Veja [VALIDACAO.md](docs/VALIDACAO.md) para os resultados e limites da verificação. Os 6 testes originais foram mantidos sem alterações. A nova suíte cobre busca com acentos, combinação de filtros, limite da nota, ordenação sem mutar a lista e estados vazios.
+
+## Prints reais do build web
+
+Capturas em 18/09/2026, com dados reais do TMDB; o catálogo pode mudar.
+
+| Listagem | Detalhes | Busca vazia |
+|---|---|---|
+| ![Listagem](docs/listagem.png) | ![Detalhes](docs/detalhes.png) | ![Busca sem resultado](docs/busca-vazia.png) |
+
+## Decisões e organização
+
+Escolhemos descoberta porque ajuda a decidir o que assistir e reaproveita a API existente, sem backend novo, dados pessoais ou permissões adicionais. A funcionalidade é real, executada localmente sobre os dados recebidos. Login/cadastro, notificações, monetização e personalização com sincronização ficaram para depois: exigem, respectivamente, gestão de contas, um gatilho útil, definição de oferta e persistência de dados do usuário.
+
+Mantivemos React Navigation para navegação, Axios para HTTP e Ionicons para ícones. Nesta etapa foram adicionados `@expo-google-fonts/space-grotesk` e `expo-splash-screen`. O lockfile registra as versões efetivamente instaladas.
+
+```text
+App.js                    providers, fontes, splash e navegação
+app.json                  nome, ícones e configuração Expo
+screens/                  HomeScreen e DetailsScreen
+components/               Button, MovieCard, Loading e ErrorState
+services/api.js           cliente TMDB
+services/moviesService.js formatação e consultas de filmes
+services/discovery.js     busca, filtro e ordenação locais
+theme.js                  cores, fonte e espaçamentos
+assets/                   marca do app
+scripts/                  geração da marca e servidor do build
+__tests__/                testes do MVP e de descoberta
+docs/                     capturas, validação e roteiro de revisão
+```
+
+A limpeza removeu `.gitkeep` de pastas já preenchidas e o fundo Android do template, centralizou cores repetidas e eliminou variáveis de erro não usadas. Documentos das etapas anteriores foram preservados como histórico.
+
+## Revisão cruzada e próximos passos
+
+**Revisão cruzada com outro grupo: pendente.** A inspeção técnica no navegador não substitui essa atividade. O [roteiro e formulário](docs/REVISAO-CRUZADA.md) estão prontos para registrar participante, data, problemas e ajustes reais.
+
+Próximas versões: busca remota com paginação, favoritos locais e depois sincronização autenticada, testes de interação em mobile e build nativo. Nenhuma dessas funções é apresentada como já implementada.
+
+## Documentos da entrega
+
+- [15 perguntas e respostas pós-MVP](RESPOSTAS-POS-MVP.md)
+- [Validação desta etapa](docs/VALIDACAO.md)
+- [Revisão cruzada — preencher após execução](docs/REVISAO-CRUZADA.md)
+- [Respostas do MVP](RESPOSTAS-MVP.md)
+- [Respostas da etapa inicial](RESPOSTAS.md)
+
+Dados e imagens: TMDB. Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
